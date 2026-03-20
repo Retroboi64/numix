@@ -1,25 +1,30 @@
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
-pub struct Vec2 {
-    pub x: f32,
-    pub y: f32,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-pub struct Vec2i {
-    pub x: i32,
-    pub y: i32,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-pub struct Vec3i {
-    pub x: i32,
-    pub y: i32,
-    pub z: i32,
+pub struct Vec2<T> {
+    pub x: T,
+    pub y: T,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
-pub struct Vec3 {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
+pub struct Vec3<T> {
+    pub x: T,
+    pub y: T,
+    pub z: T,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct Vec4<T> {
+    pub x: T,
+    pub y: T,
+    pub z: T,
+    pub w: T,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct Mat4x4<T> {
+    pub mat: [Vec4<T>; 4],
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct Mat3x4<T> {
+    pub mat: [Vec3<T>; 4],
 }
