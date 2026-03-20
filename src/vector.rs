@@ -308,6 +308,14 @@ mod tests {
     use super::*;
 
     #[test]
+    fn vec2_new() {
+        let v = Vec2::new(1.0, 2.0);
+
+        assert_eq!(v.x, 1.0);
+        assert_eq!(v.y, 2.0);
+    }
+
+    #[test]
     fn vec2_add_operator() {
         let a = Vec2::new(1, 2);
         let b = Vec2::new(3, 4);

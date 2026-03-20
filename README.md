@@ -1,6 +1,6 @@
 # Numix
 
-A small, ergonomic, zero-dependency math library for 2-D and 3-D game and graphics work, written in Rust.
+A small, ergonomic, zero-dependency math library for 2-D, 3-D and 4-D game and graphics work, written in Rust.
 
 The entire public surface is two files: `types.rs` declares the plain structs, and `vector.rs` implements all the methods and operator overloads on them. There are no allocations, no generics, and no trait soup — just `f32` and `i32` vectors that do exactly what the names say.
 
@@ -10,13 +10,11 @@ The entire public surface is two files: `types.rs` declares the plain structs, a
 
 | Type    | Fields              | Use case                                  |
 |---------|---------------------|-------------------------------------------|
-| `Vec2`  | `x: f32, y: f32`    | 2-D positions, directions, UVs            |
-| `Vec3`  | `x/y/z: f32`        | 3-D positions, normals, RGB colours       |
-| `Vec2i` | `x: i32, y: i32`    | Screen coordinates, tile positions        |
-| `Vec3i` | `x/y/z: i32`        | Voxel/grid coordinates, integer colours   |
-
-All four types are `Copy`, `Clone`, `Debug`, `PartialEq`, and `Default`.  
-The integer types additionally implement `Eq` and `Hash`.
+| `Vec2`  | `x/y: T`            | 2-D positions, directions, UVs            |
+| `Vec3`  | `x/y/z: T`          | 3-D positions, normals, RGB colours       |
+| `Vec4`  | `x/y/z/w: T`        | 4-D positions, Matrics                    |
+| `Mat3x4`| `[Vec3; 4]`         | Four sets of Vec3's                       |
+| `Mat4x4`| `[Vec4; 4]`         | Four sets of Vec4's                       |
 
 ---
 
@@ -32,7 +30,7 @@ numix = { path = "../numix" }
 Then import what you need:
 
 ```rust
-use numix::types::{Vec2, Vec3, Vec2i, Vec3i};
+use numix::types::{Vec2, Vec3, Vec4, Mat4x4};
 ```
 
 ---
@@ -189,69 +187,17 @@ Everything else (`dot`, `length`, `normalize`, `lerp`, `reflect`, `project_onto`
 
 ---
 
-## Vec2i / Vec3i
-
-Integer vectors for grid coordinates and screen-space pixel work.
-
-```rust
-let a = Vec2i::new(10, 20);
-let b = Vec2i::new(3, 4);
-
-a + b           // (13, 24)
-a - b           // (7, 16)
-a * 2           // (20, 40)
--a              // (-10, -20)
-a.dot(b)        // 110
-a.cross(b)      // 40  (scalar)
-a.abs()         // (10, 20)
-a.min(b)        // (3, 4)
-a.max(b)        // (10, 20)
-a.length()      // f32 — cast-and-sqrt
-
-// Vec3i has cross product and .xy() → Vec2i
-let v = Vec3i::new(1, 0, 0);
-let u = Vec3i::new(0, 1, 0);
-v.cross(u)      // (0, 0, 1)
-v.xy()          // Vec2i { x: 1, y: 0 }
-```
-
----
-
-## Type conversions
-
-Conversions are explicit via `From` / `Into` — no silent precision loss.
-
-```rust
-// Integer → float (lossless widening)
-let vi = Vec2i::new(3, 4);
-let vf: Vec2 = vi.into();            // Vec2 { x: 3.0, y: 4.0 }
-
-// Float → integer (truncating, same as `as i32`)
-let back: Vec2i = vf.into();         // Vec2i { x: 3, y: 4 }
-
-// Tuple round-trips
-let v: Vec2          = (1.0_f32, 2.0_f32).into();
-let t: (f32, f32)    = v.into();
-
-let v3: Vec3         = (1.0_f32, 2.0_f32, 3.0_f32).into();
-let vi3: Vec3i       = (1_i32, 2_i32, 3_i32).into();
-let vf3: Vec3        = vi3.into();
-
-// Vec3 ↔ Vec3i
-let promoted: Vec3   = Vec3i::new(1, 2, 3).into();
-```
-
----
-
 ## Display
 
 All four types implement `Display` for quick debugging:
 
 ```rust
+// They can also be diffrent types than just Floating values and Integers
 println!("{}", Vec2::new(1.0, 2.0));         // (1.0000, 2.0000)
 println!("{}", Vec3::new(0.5, 1.0, -2.5));   // (0.5000, 1.0000, -2.5000)
-println!("{}", Vec2i::new(10, -3));           // (10, -3)
-println!("{}", Vec3i::new(1, 2, 3));          // (1, 2, 3)
+
+println!("{}", Vec2::new(1, 4));             // (1, 4)
+println!("{}", Vec3::new(1, 4, 7));          // (1, 4, 7)
 ```
 
 ---
