@@ -99,6 +99,13 @@ impl<T: Scalar + SubAssign> SubAssign for Vec2<T> {
     }
 }
 
+impl<T: Scalar + MulAssign> MulAssign<T> for Vec2<T> {
+    fn mul_assign(&mut self, scalar: T) {
+        self.x *= scalar;
+        self.y *= scalar;
+    }
+}
+
 impl<T: Scalar + fmt::Display> fmt::Display for Vec2<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "({}, {})", self.x, self.y)
@@ -192,6 +199,14 @@ impl<T: Scalar + SubAssign> SubAssign for Vec3<T> {
     }
 }
 
+impl<T: Scalar + MulAssign> MulAssign<T> for Vec3<T> {
+    fn mul_assign(&mut self, scalar: T) {
+        self.x *= scalar;
+        self.y *= scalar;
+        self.z *= scalar;
+    }
+}
+
 impl<T: Scalar + fmt::Display> fmt::Display for Vec3<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "({}, {}, {})", self.x, self.y, self.z)
@@ -273,13 +288,40 @@ impl<T: Scalar> Mul<T> for Vec4<T> {
     }
 }
 
+impl<T: Scalar + AddAssign> AddAssign for Vec4<T> {
+    fn add_assign(&mut self, other: Self) {
+        self.x += other.x;
+        self.y += other.y;
+        self.z += other.z;
+        self.w += other.w;
+    }
+}
+
+impl<T: Scalar + SubAssign> SubAssign for Vec4<T> {
+    fn sub_assign(&mut self, other: Self) {
+        self.x -= other.x;
+        self.y -= other.y;
+        self.z -= other.z;
+        self.w -= other.w;
+    }
+}
+
+impl<T: Scalar + MulAssign> MulAssign<T> for Vec4<T> {
+    fn mul_assign(&mut self, scalar: T) {
+        self.x *= scalar;
+        self.y *= scalar;
+        self.z *= scalar;
+        self.w *= scalar;
+    }
+}
+
 impl<T: Scalar + fmt::Display> fmt::Display for Vec4<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "({}, {}, {}, {})", self.x, self.y, self.z, self.w)
     }
 }
 
-// Mat4x4<T> — basic row access and Vec4 multiply
+// Mat4x4<T>
 impl<T: Scalar> Mat4x4<T> {
     pub fn mul_vec4(self, v: Vec4<T>) -> Vec4<T> {
         Vec4 {
@@ -291,14 +333,28 @@ impl<T: Scalar> Mat4x4<T> {
     }
 }
 
-// Mat3x4<T> — 4 columns of Vec3 rows (e.g. a 3×4 transform matrix)
+impl<T: Scalar> Mul<Vec4<T>> for Mat4x4<T> {
+    type Output = Vec4<T>;
+    fn mul(self, v: Vec4<T>) -> Vec4<T> {
+        self.mul_vec4(v)
+    }
+}
+
+// Mat3x4<T>
 impl<T: Scalar> Mat3x4<T> {
     pub fn mul_vec4(self, v: Vec4<T>) -> Vec3<T> {
         Vec3 {
-            x: self.mat[0].dot(v.xyz()) + self.mat[3].x * v.w,
-            y: self.mat[1].dot(v.xyz()) + self.mat[3].y * v.w,
-            z: self.mat[2].dot(v.xyz()) + self.mat[3].z * v.w,
+            x: self.mat[0].dot(v),
+            y: self.mat[1].dot(v),
+            z: self.mat[2].dot(v),
         }
+    }
+}
+
+impl<T: Scalar> Mul<Vec4<T>> for Mat3x4<T> {
+    type Output = Vec3<T>;
+    fn mul(self, v: Vec4<T>) -> Vec3<T> {
+        self.mul_vec4(v)
     }
 }
 
@@ -310,48 +366,38 @@ mod tests {
     #[test]
     fn vec2_new() {
         let v = Vec2::new(1.0, 2.0);
-
         assert_eq!(v.x, 1.0);
         assert_eq!(v.y, 2.0);
     }
 
     #[test]
     fn vec2_add_operator() {
-        let a = Vec2::new(1, 2);
-        let b = Vec2::new(3, 4);
-        assert_eq!(a + b, Vec2::new(4, 6));
+        assert_eq!(Vec2::new(1, 2) + Vec2::new(3, 4), Vec2::new(4, 6));
     }
 
     #[test]
     fn vec2_sub_operator() {
-        let a = Vec2::new(5, 7);
-        let b = Vec2::new(2, 3);
-        assert_eq!(a - b, Vec2::new(3, 4));
+        assert_eq!(Vec2::new(5, 7) - Vec2::new(2, 3), Vec2::new(3, 4));
     }
 
     #[test]
     fn vec2_neg() {
-        let v = Vec2::new(1, -2);
-        assert_eq!(-v, Vec2::new(-1, 2));
+        assert_eq!(-Vec2::new(1, -2), Vec2::new(-1, 2));
     }
 
     #[test]
     fn vec2_scale() {
-        let v = Vec2::new(2, 3);
-        assert_eq!(v * 4, Vec2::new(8, 12));
+        assert_eq!(Vec2::new(2, 3) * 4, Vec2::new(8, 12));
     }
 
     #[test]
     fn vec2_dot() {
-        let a = Vec2::new(1, 2);
-        let b = Vec2::new(3, 4);
-        assert_eq!(a.dot(b), 11); // 1*3 + 2*4
+        assert_eq!(Vec2::new(1, 2).dot(Vec2::new(3, 4)), 11);
     }
 
     #[test]
     fn vec2_length_sq() {
-        let v = Vec2::new(3, 4);
-        assert_eq!(v.length_sq(), 25); // 9 + 16
+        assert_eq!(Vec2::new(3, 4).length_sq(), 25);
     }
 
     #[test]
@@ -362,24 +408,34 @@ mod tests {
     }
 
     #[test]
+    fn vec2_sub_assign() {
+        let mut v = Vec2::new(5, 7);
+        v -= Vec2::new(2, 3);
+        assert_eq!(v, Vec2::new(3, 4));
+    }
+
+    #[test]
+    fn vec2_mul_assign() {
+        let mut v = Vec2::new(2, 3);
+        v *= 4;
+        assert_eq!(v, Vec2::new(8, 12));
+    }
+
+    #[test]
     fn vec3_add_operator() {
-        let a = Vec3::new(1, 2, 3);
-        let b = Vec3::new(4, 5, 6);
-        assert_eq!(a + b, Vec3::new(5, 7, 9));
+        assert_eq!(Vec3::new(1, 2, 3) + Vec3::new(4, 5, 6), Vec3::new(5, 7, 9));
     }
 
     #[test]
     fn vec3_dot_includes_z() {
-        let a = Vec3::new(1, 2, 3);
-        let b = Vec3::new(4, 5, 6);
-        assert_eq!(a.dot(b), 32); // 1*4 + 2*5 + 3*6 = 4+10+18
+        assert_eq!(Vec3::new(1, 2, 3).dot(Vec3::new(4, 5, 6)), 32);
     }
 
     #[test]
     fn vec3_cross_product() {
         let a = Vec3::new(1, 0, 0);
         let b = Vec3::new(0, 1, 0);
-        assert_eq!(a.cross(b), Vec3::new(0, 0, 1)); // right-hand rule
+        assert_eq!(a.cross(b), Vec3::new(0, 0, 1));
     }
 
     #[test]
@@ -391,21 +447,24 @@ mod tests {
 
     #[test]
     fn vec3_length_sq() {
-        let v = Vec3::new(1, 2, 2);
-        assert_eq!(v.length_sq(), 9); // 1+4+4
+        assert_eq!(Vec3::new(1, 2, 2).length_sq(), 9);
+    }
+
+    #[test]
+    fn vec3_mul_assign() {
+        let mut v = Vec3::new(1, 2, 3);
+        v *= 3;
+        assert_eq!(v, Vec3::new(3, 6, 9));
     }
 
     #[test]
     fn vec4_dot() {
-        let a = Vec4::new(1, 2, 3, 4);
-        let b = Vec4::new(1, 0, 0, 0);
-        assert_eq!(a.dot(b), 1);
+        assert_eq!(Vec4::new(1, 2, 3, 4).dot(Vec4::new(1, 0, 0, 0)), 1);
     }
 
     #[test]
     fn vec4_xyz_drops_w() {
-        let v = Vec4::new(1, 2, 3, 99);
-        assert_eq!(v.xyz(), Vec3::new(1, 2, 3));
+        assert_eq!(Vec4::new(1, 2, 3, 99).xyz(), Vec3::new(1, 2, 3));
     }
 
     #[test]
@@ -413,5 +472,43 @@ mod tests {
         let a = Vec4::new(1, 2, 3, 4);
         let b = Vec4::new(5, 6, 7, 8);
         assert_eq!((a + b) - b, a);
+    }
+
+    #[test]
+    fn vec4_add_assign() {
+        let mut v = Vec4::new(1, 2, 3, 4);
+        v += Vec4::new(4, 3, 2, 1);
+        assert_eq!(v, Vec4::new(5, 5, 5, 5));
+    }
+
+    #[test]
+    fn vec4_mul_assign() {
+        let mut v = Vec4::new(1, 2, 3, 4);
+        v *= 2;
+        assert_eq!(v, Vec4::new(2, 4, 6, 8));
+    }
+
+    #[test]
+    fn mat4x4_mul_vec4_identity() {
+        let identity = Mat4x4::from([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]);
+        let v = Vec4::new(1, 2, 3, 4);
+        assert_eq!(identity * v, v);
+    }
+
+    #[test]
+    fn mat3x4_mul_vec4_translation() {
+        // Rows: [1 0 0 tx], [0 1 0 ty], [0 0 1 tz]
+        let m = Mat3x4::from([[1, 0, 0, 5], [0, 1, 0, 6], [0, 0, 1, 7]]);
+        // Point at origin with w=1 should be translated.
+        let v = Vec4::new(0, 0, 0, 1);
+        assert_eq!(m * v, Vec3::new(5, 6, 7));
+    }
+
+    #[test]
+    fn mat3x4_mul_vec4_direction() {
+        // Direction vector (w=0) should not be translated.
+        let m = Mat3x4::from([[1, 0, 0, 5], [0, 1, 0, 6], [0, 0, 1, 7]]);
+        let v = Vec4::new(1, 0, 0, 0);
+        assert_eq!(m * v, Vec3::new(1, 0, 0));
     }
 }

@@ -26,5 +26,31 @@ pub struct Mat4x4<T> {
 
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Mat3x4<T> {
-    pub mat: [Vec3<T>; 4],
+    pub mat: [Vec4<T>; 3],
+}
+
+impl<T: Copy + Default> From<[[T; 4]; 4]> for Mat4x4<T> {
+    fn from(a: [[T; 4]; 4]) -> Self {
+        Self {
+            mat: a.map(|r| Vec4 {
+                x: r[0],
+                y: r[1],
+                z: r[2],
+                w: r[3],
+            }),
+        }
+    }
+}
+
+impl<T: Copy + Default> From<[[T; 4]; 3]> for Mat3x4<T> {
+    fn from(a: [[T; 4]; 3]) -> Self {
+        Self {
+            mat: a.map(|r| Vec4 {
+                x: r[0],
+                y: r[1],
+                z: r[2],
+                w: r[3],
+            }),
+        }
+    }
 }
