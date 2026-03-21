@@ -53,8 +53,8 @@ impl Mat4x4<f32> {
         Self::from([
             [f / aspect, 0.0, 0.0, 0.0],
             [0.0, f, 0.0, 0.0],
-            [0.0, 0.0, (far + near) * nf, -1.0],
-            [0.0, 0.0, 2.0 * far * near * nf, 0.0],
+            [0.0, 0.0, (far + near) * nf, 2.0 * far * near * nf],
+            [0.0, 0.0, -1.0, 0.0],
         ])
     }
 
@@ -123,6 +123,7 @@ impl Vec4<f32> {
     }
 }
 
+// Tests
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -150,7 +151,6 @@ mod tests {
     #[test]
     fn translate_moves_origin() {
         let m = Mat4x4::translate(1.0, 2.0, 3.0);
-        // The last column of a translation matrix (row-major: last element of each row)
         assert_eq!(m.mat[0].w, 1.0);
         assert_eq!(m.mat[1].w, 2.0);
         assert_eq!(m.mat[2].w, 3.0);
@@ -160,8 +160,20 @@ mod tests {
     fn rotate_y_90_maps_x_to_neg_z() {
         use std::f32::consts::FRAC_PI_2;
         let m = Mat4x4::rotate(FRAC_PI_2, 0.0, 1.0, 0.0);
-        // +X should map to -Z: first column of rotation block → (0, 0, -1)
-        assert!((m.mat[0].x).abs() < 1e-6); // row0.x ≈ 0
-        assert!((m.mat[2].x - -1.0).abs() < 1e-6); // row2.x ≈ -1
+        // Row-major Y rotation: row0=[cos,0,sin,0], row2=[-sin,0,cos,0]
+        // At 90°: cos≈0, sin≈1
+        assert!((m.mat[0].x).abs() < 1e-6); // cos ≈ 0
+        assert!((m.mat[0].z - 1.0).abs() < 1e-6); // sin ≈ 1
+        assert!((m.mat[2].x - -1.0).abs() < 1e-6); // -sin ≈ -1
+        assert!((m.mat[2].z).abs() < 1e-6); // cos ≈ 0
+    }
+
+    #[test]
+    fn perspective_w_row_is_neg_z() {
+        // The -1 that feeds -Z into W must sit at row3, col2 in row-major.
+        let p = Mat4x4::perspective(45.0_f32.to_radians(), 1.0, 0.1, 100.0);
+        assert_eq!(p.mat[3].z, -1.0);
+        assert_eq!(p.mat[3].x, 0.0);
+        assert_eq!(p.mat[3].w, 0.0);
     }
 }
