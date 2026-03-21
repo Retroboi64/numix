@@ -1,7 +1,7 @@
 [package]
 name = "numix"
-version = "0.1.3"
-edition = "2021"
+version = "0.1.4"
+edition = "2024"
 description = "A fast, lightweight Rust library for math operations and numeric computations."
 license = "MIT"
 authors = ["Patrick Reese"]
